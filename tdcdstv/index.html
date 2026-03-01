@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="vi">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="color-scheme" content="dark light" />
+  <meta name="theme-color" content="#0b1020" media="(prefers-color-scheme: dark)">
+  <meta name="theme-color" content="#f6f8ff" media="(prefers-color-scheme: light)">
+  <title>[Tên chủ đề trắc nghiệm]</title>
+  <meta name="description" content="Minigame mở đầu tọa đàm '[Nghề thư viện trong bối cảnh chuyển đổi số]'" />
+  <link rel="icon" href="assets/logo.png" type="image/png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    html {
+      scroll-behavior: smooth
+    }
+  </style>
+</head>
+
+<body>
+  <header class="app-header" role="banner">
+    <div class="brand">
+      <img src="assets/logo.png" alt="" class="logo" />
+      <div>
+        <h1>[Tên chủ đề trắc nghiệm]</h1>
+        <p class="subtitle"><em>[Mô tả phụ hoặc tên sự kiện]</em></p>
+      </div>
+    </div>
+    <div class="header-right">
+      <button id="btnTheme" class="btn btn-ghost" title="Đổi giao diện (sáng/tối)"
+        aria-label="Đổi giao diện">🌓</button>
+    </div>
+  </header>
+
+  <!-- LOBBY / SẢNH -->
+  <main id="view-lobby" class="view current" role="main">
+    <section class="hero">
+      <div class="hero-text">
+        <h2>Chào mừng 🎓</h2>
+        <p>Mô tả mục đích của bài trắc nghiệm</p>
+        <details class="help">
+          <summary>Hướng dẫn</summary>
+          <ol>
+            <li><strong>Trả lời trắc nghiệm:</strong> 25 câu hỏi, mỗi câu có tối đa 30 giây để suy nghĩ và chọn đáp án.
+            </li>
+            <li><strong>Cách tính điểm:</strong>
+              Mỗi câu đúng bạn sẽ nhận được <strong>10 điểm cơ bản</strong>. Ngoài ra, nếu trả lời nhanh, bạn sẽ được
+              cộng thêm <strong>điểm thưởng tốc độ</strong> (tối đa 10 điểm cộng thêm, giảm dần theo thời gian). Trả lời
+              sai được 0đ.
+            </li>
+            <li><strong>Chuyển câu:</strong> Hệ thống sẽ <em>tự động chuyển ngay</em> sang câu tiếp theo ngay sau khi
+              bạn chọn một đáp án. Bạn không thể quay lại câu trước đó.</li>
+            <li>Hết 30 giây mà chưa chọn đáp án, hệ thống sẽ tự động coi như câu đó sai (0đ) và tự qua câu tiếp theo.
+            </li>
+            <li><strong>Kết quả:</strong> Điểm số sẽ được ghi nhận âm thầm. Sau khi nộp bài xong, bạn có thể lựa chọn
+              xem lại tổng điểm hoặc không. Danh sách đạt giải sẽ được BTC công bố sau trên Trang Tuổi trẻ Khoa Khoa học
+              Xã hội và Nghệ thuật.</li>
+          </ol>
+        </details>
+        <ul class="bullets">
+          <li>Chủ đề: <strong>[Mô tả các nội dung chính hoặc kiến thức của bài trắc nghiệm]</strong>.
+          </li>
+          <li>Mức độ: <strong>[Mức độ khó của câu hỏi, VD: Nhận biết & Thông hiểu]</strong></li>
+          <li><strong>[Các giải thưởng hoặc thông tin phụ thêm từ BTC]</strong></li>
+        </ul>
+      </div>
+      <form id="formPlayer" class="card form" novalidate>
+        <h3>Thông tin sinh viên</h3>
+        <label>Họ và tên <span class="req"></span>
+          <input id="inpName" name="name" type="text" inputmode="text" autocomplete="name" required
+            placeholder="VD: Nguyễn Văn A" />
+        </label>
+        <label>MSSV <span class="req"></span>
+          <input id="inpMssv" name="mssv" type="text" inputmode="numeric" required placeholder="VD: 3125390000" />
+        </label>
+        <label>Lớp học <span class="req"></span>
+          <input id="inpClass" name="class" type="text" required placeholder="VD: DTV1201" />
+        </label>
+        <label class="consent">
+          <input id="inpConsent" type="checkbox" />Tôi đồng ý cung cấp các thông tin trên và kết quả tới ban tổ chức để
+          tổng hợp và xếp hạng.
+        </label>
+        <div class="form-actions">
+          <button id="btnStart" type="button" class="btn btn-primary">Bắt đầu</button>
+        </div>
+      </form>
+    </section>
+  </main>
+
+  <!-- GAME -->
+  <main id="view-game" class="view hidden" aria-live="polite">
+    <section class="hud" role="region" aria-label="Thanh thông tin">
+      <div class="hud-item">
+        <span class="label">Câu</span>
+        <span id="txtProgress" class="value">1/25</span>
+      </div>
+      <div class="hud-item timer" id="timerWrap" title="Thời gian còn lại">
+        <div class="ring" id="timerRing" role="timer" aria-live="polite">
+          <span id="txtTimer">30</span>
+        </div>
+      </div>
+      <div class="hud-item player-info">
+        <span id="hudName" class="label">Người chơi</span>
+        <span id="hudMssv" class="value">–</span>
+      </div>
+    </section>
+
+    <div class="line-progress" aria-hidden="true">
+      <div id="lineProgress" class="line-progress-bar"></div>
+    </div>
+
+    <section id="questionCard" class="card question-card">
+      <div class="q-meta">
+        <span id="qTags" class="tags"></span>
+        <span id="qRemain" class="remain"></span>
+      </div>
+      <h3 id="qText">Câu hỏi?</h3>
+      <ol id="options" class="options" role="listbox" aria-label="Các lựa chọn trả lời"></ol>
+
+      <div id="feedback" class="feedback hidden" aria-live="polite"></div>
+      <div id="explanation" class="explanation hidden"></div>
+
+      <div class="actions sticky">
+        <button id="btnNext" class="btn" disabled>Tiếp tục ▶</button>
+      </div>
+    </section>
+  </main>
+
+  <!-- SUMMARY -->
+  <main id="view-summary" class="view hidden">
+    <section class="card">
+      <h3>Kết quả bài làm</h3>
+      <div class="summary-grid">
+        <div>
+          <div class="stat"><span class="label">Điểm tổng</span> <span id="sumTotal" class="value">0</span></div>
+          <div class="stat"><span class="label">Điểm cơ bản</span> <span id="sumBase" class="value">0</span></div>
+          <div class="stat"><span class="label">Điểm tốc độ</span> <span id="sumSpeed" class="value">0</span></div>
+          <div class="stat"><span class="label">Độ chính xác</span> <span id="sumAcc" class="value">0%</span></div>
+          <div class="stat"><span class="label">Thời gian làm bài</span> <span id="sumTime" class="value">0s</span>
+          </div>
+          <div class="stat"><span class="label">Mã phiên</span> <span id="sumSession" class="value mono">–</span></div>
+        </div>
+        <div class="player-review">
+          <h4>Thông tin người chơi</h4>
+          <div class="kv"><span>Họ và tên:</span> <strong id="sumName">–</strong></div>
+          <div class="kv"><span>MSSV:</span> <strong id="sumMssv">–</strong></div>
+          <div class="kv"><span>Lớp học:</span> <strong id="sumClass">–</strong></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div id="modalMask" class="modal-mask hidden" role="dialog" aria-modal="true">
+    <div class="modal">
+      <h3>Chỉnh sửa thông tin</h3>
+      <form id="formEditPlayer" class="form modal-form">
+        <label>Họ và tên <input id="editName" type="text" required></label>
+        <label>MSSV <input id="editMssv" type="text" required></label>
+        <div class="actions modal-actions">
+          <button type="button" id="btnEditCancel" class="btn">Huỷ</button>
+          <button type="submit" id="btnEditSave" class="btn btn-primary">Lưu</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <footer class="app-footer" role="contentinfo">
+    <div>© <span id="year"></span> TSOSAD255</div>
+  </footer>
+
+  <script src="questions.js"></script>
+  <script src="app.js"></script>
+</body>
+
+</html>
