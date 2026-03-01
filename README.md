@@ -1,3 +1,3 @@
 # xanghetest
-xanghetestxanghetest
+xanghetest
 xanghetest
