@@ -350,6 +350,17 @@ function updateTimerRing() {
   const pct = clamp(state.timer.remain / CONFIG.TIME_PER_QUESTION, 0, 1);
   $("#timerRing").style.setProperty("--pct", pct.toFixed(4));
   $("#txtTimer").textContent = Math.max(0, state.timer.remain);
+
+  // Cập nhật số điểm có thể nhận (hiện tại)
+  const potentialBonus = Math.round(CONFIG.MAX_SPEED_BONUS * (state.timer.remain / CONFIG.TIME_PER_QUESTION));
+  const potentialScore = CONFIG.BASE_POINTS + potentialBonus;
+  const txtPot = $("#txtPotentialScore");
+  if (txtPot) {
+    txtPot.textContent = `+${potentialScore}`;
+    // Nếu điểm sắp giảm về mức thấp, đổi màu cảnh báo
+    if (potentialScore <= 12) txtPot.style.color = "var(--bad)";
+    else txtPot.style.color = "var(--ok)";
+  }
 }
 
 function onTimeout() {
@@ -424,6 +435,7 @@ function resetToLobby() {
   $("#options").innerHTML = "";
   $("#feedback").classList.add("hidden");
   $("#explanation").classList.add("hidden");
+  const txtPot = $("#txtPotentialScore"); if (txtPot) { txtPot.textContent = `+${CONFIG.BASE_POINTS + CONFIG.MAX_SPEED_BONUS}`; txtPot.style.color = "var(--ok)"; }
   const bar = $("#lineProgress"); if (bar) bar.style.width = "0%";
 }
 
