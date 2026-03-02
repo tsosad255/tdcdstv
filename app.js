@@ -1,12 +1,12 @@
 const CONFIG = {
   QUESTIONS_PER_GAME: 25,
   TIME_PER_QUESTION: 30, // 30s cho mỗi câu
-  BASE_POINTS: 10,        // điểm cơ bản cho mỗi câu đúng
+  BASE_POINTS: 10,       // điểm cơ bản cho mỗi câu đúng
   MAX_SPEED_BONUS: 10,
-  AUTO_NEXT_SECONDS: 2,    // tự động sang câu tiếp theo sau khi chấm (giây) - Đặt ngắn lại để nhanh hơn
+  AUTO_NEXT_SECONDS: 2,  // tự động sang câu tiếp theo sau khi chấm (giây) - Đặt ngắn lại để nhanh hơn
   SHUFFLE_QUESTIONS: true,
-  SHUFFLE_OPTIONS: true,  // trộn thứ tự đáp án trong mỗi câu
-  DIFFICULTY_QUOTAS: {    // đảm bảo mức độ khó đồng đều giữa các phiên
+  SHUFFLE_OPTIONS: true, // trộn thứ tự đáp án trong mỗi câu
+  DIFFICULTY_QUOTAS: {   // đảm bảo mức độ khó đồng đều giữa các phiên
     NB: 10,  // Nhận biết
     TH: 10,  // Thông hiểu
     SL: 5   // Suy luận nhẹ
@@ -15,6 +15,30 @@ const CONFIG = {
   REQUIRE_CONSENT: true,     // nếu true: bắt buộc tick đồng ý mới cho bắt đầu
   THEME: "dark"               // "dark" hoặc "light"
 };
+
+// Hàm hiển thị thông báo tuỳ chỉnh dạng popup HTML
+function customAlert(msg, callback, isLoading = false, btnText = "OK") {
+  const modal = $("#alertModal");
+  if (!modal) {
+    if (!isLoading) alert(msg); // Fallback to browser alert if modal not found
+    if (callback && !isLoading) callback();
+    return;
+  }
+  $("#alertMessage").textContent = msg;
+  modal.classList.remove("hidden");
+
+  const btn = $("#btnAlertOk");
+  if (isLoading) {
+    btn.style.display = "none";
+  } else {
+    btn.style.display = "inline-block";
+    btn.textContent = btnText;
+    btn.onclick = () => {
+      modal.classList.add("hidden");
+      if (callback) callback();
+    };
+  }
+}
 
 // ====== Trạng thái trò chơi ======
 const state = {
@@ -128,8 +152,8 @@ function withShuffledOptions(q, rng) {
 // ====== View helpers ======
 function switchView(id) {
   $$(".view").forEach(v => v.classList.add("hidden"));
-  $(`#${id}`).classList.remove("hidden");
-  $(`#${id}`).classList.add("current");
+  $(`#${id} `).classList.remove("hidden");
+  $(`#${id} `).classList.add("current");
 }
 
 function setTheme(mode) {
@@ -196,9 +220,28 @@ function onStart() {
   const lop = $("#inpClass").value.trim();
   const consent = $("#inpConsent").checked;
 
-  if (!name || !mssv || !lop) { alert("Vui lòng nhập đầy đủ Họ tên, MSSV và Lớp học."); return; }
+  if (!name || !mssv || !lop) { customAlert("Vui lòng nhập đầy đủ Họ tên, MSSV và Lớp học."); return; }
+
+  const nameRegex = /^[a-zA-ZÀÁÂÃÈÉÊÌÍÒÓÔÕÙÚĂĐĨŨƠàáâãèéêìíòóôõùúăđĩũơƯĂẠẢẤẦẨẪẬẮẰẲẴẶẸẺẼỀỀỂưăạảấầẩẫậắằẳẵặẹẻẽềềểÊỄỆỈỊỌỎỐỒỔỖỘỚỜỞỠỢỤỦỨỪễệỉịọỏốồổỗộớờởỡợụủứừỮỰỲỴÝỶỸửữựỳỵỷỹ\s]+$/;
+  if (!nameRegex.test(name)) {
+    customAlert("Họ và tên chỉ được chứa chữ cái.");
+    return;
+  }
+
+  const mssvRegex = /^\d{10,11}$/;
+  if (!mssvRegex.test(mssv)) {
+    customAlert("Mã số sinh viên (MSSV) bắt buộc phải là số và có độ dài từ 10 đến 11 kí tự.");
+    return;
+  }
+
+  const classRegex = /^[a-zA-Z]{3}\d{4}$/;
+  if (!classRegex.test(lop)) {
+    customAlert("Lớp học phải gồm chính xác 7 kí tự: 3 kí tự đầu là chữ, 4 kí tự sau là số (VD: DTV1201).");
+    return;
+  }
+
   if (CONFIG.REQUIRE_CONSENT && !consent) {
-    alert("Vui lòng xác nhận đồng ý gửi thông tin.");
+    customAlert("Vui lòng Xác nhận đồng ý cung cấp thông tin.");
     return;
   }
 
@@ -219,7 +262,7 @@ function onStart() {
   // Lấy câu hỏi theo quota độ khó
   const bank = Array.isArray(window.QUESTION_BANK) ? window.QUESTION_BANK.slice() : [];
   if (bank.length === 0) {
-    alert("Chưa có câu hỏi trong QUESTION_BANK, hãy báo lại lỗi cho BTC.");
+    customAlert("Chưa có câu hỏi trong QUESTION_BANK, hãy báo lại lỗi cho BTC.");
     return;
   }
 
@@ -230,7 +273,7 @@ function onStart() {
 
   // Bật HUD thông tin người chơi
   const hudName = $("#hudName"); if (hudName) hudName.textContent = name;
-  const hudMssv = $("#hudMssv"); if (hudMssv) hudMssv.textContent = `${mssv} - ${lop}`;
+  const hudMssv = $("#hudMssv"); if (hudMssv) hudMssv.textContent = `${mssv} - ${lop} `;
 
   switchView("view-game");
   renderCurrent();
@@ -470,14 +513,15 @@ function resetToLobby() {
 async function sendToSheets() {
   const endpoint = CONFIG.GOOGLE_SHEETS_ENDPOINT;
   if (!endpoint) {
-    alert("Lỗi ENDPOINT hãy báo lại với BTC.");
+    customAlert("Lỗi ENDPOINT hãy báo lại với BTC.");
     return;
   }
   const btn = $("#btnSend"); if (btn) btn.disabled = true;
   const correctCount = state.answers.filter(a => a.correct).length;
   const payload = {
     sessionId: state.sessionId,
-    player: state.player,
+    // Google Sheets apps script gốc kì vọng "email", nên ta gán thông tin "lop" vào trường "email" để gửi, đồng thời giữ nguyên "lop" để không làm hỏng code cũ của sheet.
+    player: { name: state.player.name, mssv: state.player.mssv, lop: state.player.lop, email: state.player.lop },
     score: { base: state.score.base, speedBonus: state.score.speedBonus, total: state.score.total },
     meta: {
       totalQuestions: state.questions.length,
@@ -490,24 +534,44 @@ async function sendToSheets() {
   };
 
   try {
-    // Dùng 'text/plain' + 'no-cors' để tránh preflight; phản hồi sẽ không đọc được
-    await fetch(endpoint, {
+    // Hiển thị trạng thái đang gửi
+    customAlert("Hệ thống đang ghi nhận dữ liệu vào máy chủ, vui lòng đợi trong giây lát...", null, true);
+
+    const res = await fetch(endpoint, {
       method: "POST",
-      mode: "no-cors",
       headers: { "Content-Type": "text/plain;charset=utf-8" },
       body: JSON.stringify(payload)
     });
 
-    // Đã nộp thành công, hiện popup thông báo
-    alert(
-      "Kết quả điểm số đã được hệ thống ghi nhận. Kết quả giải thưởng chung cuộc sẽ được công bố tại Trang Tuổi trẻ Khoa Khoa học Xã hội và Nghệ thuật."
-    );
+    try {
+      const data = await res.json();
+      if (!data.ok) throw new Error(data.error || "Máy chủ phản hồi lỗi");
+    } catch (parseErr) {
+      if (parseErr.message.includes("Máy chủ")) throw parseErr;
+      throw new Error("Lỗi máy chủ Google Apps Script (Hãy đảm bảo đã tạo New Deployment)");
+    }
 
-    // Đã báo xong, người dùng bấm OK thì hiển thị summary (có bảng điểm)
-    $("#view-summary").classList.add("current");
+    // Đã nộp thành công, hiện popup thông báo
+    customAlert(
+      "Kết quả điểm số đã được hệ thống ghi nhận. Kết quả giải thưởng chung cuộc sẽ được công bố tại Trang Tuổi trẻ Khoa Khoa học Xã hội và Nghệ thuật.",
+      () => {
+        // Đã báo xong, người dùng bấm OK thì hiển thị summary (có bảng điểm)
+        $("#view-summary").classList.add("current");
+      },
+      false,
+      "Hoàn tất"
+    );
   } catch (err) {
     console.error(err);
-    alert("Gửi thất bại. Hãy kiểm tra mạng.");
+    if (btn) btn.disabled = false;
+    customAlert(
+      "Gửi dữ liệu nhận kết quả thất bại:\n" + err.message + "\n\nBạn có muốn thử gửi lại không?",
+      () => {
+        sendToSheets(); // Thử gửi lại
+      },
+      false,
+      "Gửi lại"
+    );
   }
 }
 

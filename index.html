@@ -54,9 +54,11 @@
             </li>
             <li>Hết 30 giây mà chưa chọn đáp án, hệ thống sẽ tự động coi như câu đó sai (0đ) và tự qua câu tiếp theo.
             </li>
-            <li><strong>Kết quả:</strong> Điểm số sẽ được ghi nhận Sau khi nộp bài xong. Danh sách đạt giải sẽ được BTC công bố sau trên Trang Tuổi trẻ Khoa Khoa học
+            <li><strong>Kết quả:</strong> Điểm số sẽ được ghi nhận Sau khi nộp bài xong. Danh sách đạt giải sẽ được BTC
+              công bố sau trên Trang Tuổi trẻ Khoa Khoa học
               Xã hội và Nghệ thuật.</li>
-            <li><strong>Lưu ý:</strong> Ban tổ chức được quyền <strong>Huỷ kết quả</strong> nếu phát hiện dấu hiện gian lận nên hãy tham gia với tinh thần giải trí và học hỏi nhee. </li>
+            <li><strong>Lưu ý:</strong> Ban tổ chức được quyền <strong>Huỷ kết quả</strong> nếu phát hiện dấu hiện gian
+              lận nên hãy tham gia với tinh thần giải trí và học hỏi nhee. </li>
           </ol>
         </details>
         <ul class="bullets">
@@ -79,7 +81,8 @@
           <input id="inpClass" name="class" type="text" required placeholder="VD: DTT1251" />
         </label>
         <label class="consent">
-          <input id="inpConsent" type="checkbox" />Tôi đồng ý cung cấp các thông tin cá nhân và kết quả tới ban tổ chức để
+          <input id="inpConsent" type="checkbox" />Tôi đồng ý cung cấp các thông tin cá nhân và kết quả tới ban tổ chức
+          để
           tổng hợp và xếp hạng.
         </label>
         <div class="form-actions">
@@ -154,17 +157,11 @@
     </section>
   </main>
 
-  <div id="modalMask" class="modal-mask hidden" role="dialog" aria-modal="true">
-    <div class="modal">
-      <h3>Chỉnh sửa thông tin</h3>
-      <form id="formEditPlayer" class="form modal-form">
-        <label>Họ và tên <input id="editName" type="text" required></label>
-        <label>MSSV <input id="editMssv" type="text" required></label>
-        <div class="actions modal-actions">
-          <button type="button" id="btnEditCancel" class="btn">Huỷ</button>
-          <button type="submit" id="btnEditSave" class="btn btn-primary">Lưu</button>
-        </div>
-      </form>
+  <div id="alertModal" class="modal-mask hidden" role="dialog" aria-modal="true" style="z-index: 9999;">
+    <div class="modal" style="max-width: 400px; text-align: center;">
+      <h3 style="margin-top: 0;">Thông báo</h3>
+      <p id="alertMessage" style="margin-bottom: 20px; font-size: 1.05rem; line-height: 1.5;"></p>
+      <button id="btnAlertOk" class="btn btn-primary" style="min-width: 120px;">OK</button>
     </div>
   </div>
 
