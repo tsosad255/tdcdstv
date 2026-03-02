@@ -236,7 +236,7 @@ async function onStart() {
 
   const classRegex = /^[a-zA-Z]{3}\d{4}$/;
   if (!classRegex.test(lop)) {
-    customAlert("Lớp học phải gồm chính xác 7 kí tự: 3 kí tự đầu là chữ, 4 kí tự sau là số (VD: DTV1201).");
+    customAlert("Mã lớp gồm 7 kí tự: 3 kí tự chữ, 4 kí tự số (VD: DTT1251).");
     return;
   }
 
@@ -268,7 +268,7 @@ async function onStart() {
     }
   } catch (err) {
     console.warn("Lỗi kiểm tra trùng lặp MSSV:", err);
-    customAlert("Lỗi kết nối máy chủ khi kiểm tra MSSV. Vui lòng thử lại sau.");
+    customAlert("Lỗi kết nối máy chủ khi kiểm tra MSSV. Thử F5 lại nếu vẫn lỗi hãy báo BTC.");
     btnStart.disabled = false;
     btnStart.textContent = originalText;
     return;
