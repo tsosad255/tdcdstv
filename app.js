@@ -152,7 +152,7 @@ window.addEventListener("DOMContentLoaded", () => {
 
   // Form actions
   $("#btnStart").addEventListener("click", onStart);
-  $("#btnNext").addEventListener("click", nextQuestion);
+  $("#btnNext").addEventListener("click", commitAnswer);
   $("#btnSend").addEventListener("click", sendToSheets);
   $("#btnDownload").addEventListener("click", downloadResult);
   $("#btnReplay").addEventListener("click", resetToLobby);
@@ -240,6 +240,7 @@ function onStart() {
 function renderCurrent() {
   const q = state.questions[state.currentIndex];
   if (!q) return;
+  state.currentChoice = null;
 
   // HUD
   $("#txtProgress").textContent = `${state.currentIndex + 1}/${state.questions.length}`;
@@ -248,9 +249,6 @@ function renderCurrent() {
 
   // Question
   $("#qText").innerHTML = q.prompt;
-  $("#qTags").textContent = (q.tags && q.tags.join(" · ")) || "";
-  const remain = state.questions.length - state.currentIndex - 1;
-  const remainEl = $("#qRemain"); if (remainEl) remainEl.textContent = remain > 0 ? `Còn ${remain} câu` : "Câu cuối";
   const ol = $("#options");
   ol.innerHTML = "";
 
@@ -290,28 +288,41 @@ function renderCurrent() {
 
 function onChoose(i) {
   if (state.locked) return;
+
+  state.currentChoice = i;
+
+  // Hiển thị đã chọn (trạng thái chosen)
+  const optionsList = $("#options").children;
+  for (let idx = 0; idx < optionsList.length; idx++) {
+    optionsList[idx].removeAttribute("data-state");
+  }
+  if (optionsList[i]) optionsList[i].setAttribute("data-state", "chosen");
+
+  // Bật nút Tiếp tục
+  $("#btnNext").disabled = false;
+}
+
+function commitAnswer() {
+  if (state.locked) return;
   lockQuestion();
   const q = state.questions[state.currentIndex];
   if (!q) return;
 
   stopTimer();
-  const elapsed = CONFIG.TIME_PER_QUESTION - state.timer.remain; // giây
+  const elapsed = CONFIG.TIME_PER_QUESTION - Math.max(0, state.timer.remain); // giây
   state.totalElapsedSec += elapsed;
 
+  const i = state.currentChoice;
   const correctIndex = q.answerIndex;
   const correct = (i === correctIndex);
 
-  const base = correct ? CONFIG.BASE_POINTS : 0;
+  const base = correct && i !== null ? CONFIG.BASE_POINTS : 0;
 
   // Logic điểm cộng: 10 điểm cơ bản + tối đa 10 điểm thưởng nếu chọn ngay lập tức (phân bổ đều theo 30s)
-  const bonus = correct ? Math.round(CONFIG.MAX_SPEED_BONUS * (state.timer.remain / CONFIG.TIME_PER_QUESTION)) : 0;
-  const gain = base + bonus;
+  const bonus = correct && i !== null ? Math.round(CONFIG.MAX_SPEED_BONUS * (Math.max(0, state.timer.remain) / CONFIG.TIME_PER_QUESTION)) : 0;
 
   state.score.base += base;
   state.score.speedBonus += bonus;
-
-  // Cập nhật điểm HUD (nhưng không báo đúng/sai)
-  // $("#txtScore").textContent = state.score.total; // Removed score updates
 
   // Haptic nhẹ khi người dùng chọn đáp án
   vibrate(15);
@@ -349,27 +360,54 @@ function stopTimer() {
 function updateTimerRing() {
   const pct = clamp(state.timer.remain / CONFIG.TIME_PER_QUESTION, 0, 1);
   $("#timerRing").style.setProperty("--pct", pct.toFixed(4));
-  $("#txtTimer").textContent = Math.max(0, state.timer.remain);
+
+  // Cập nhật số điểm có thể nhận (hiện tại)
+  const potentialBonus = Math.round(CONFIG.MAX_SPEED_BONUS * (state.timer.remain / CONFIG.TIME_PER_QUESTION));
+  const potentialScore = CONFIG.BASE_POINTS + potentialBonus;
+  const txtPot = $("#txtPotentialScore");
+  if (txtPot) {
+    txtPot.textContent = `+${potentialScore}`;
+    // Nếu điểm sắp giảm về mức thấp, đổi màu cảnh báo
+    if (potentialScore <= 12) txtPot.style.color = "var(--bad)";
+    else txtPot.style.color = "var(--ok)";
+  }
 }
 
 function onTimeout() {
-  // Chấm như trả lời sai
-  const q = state.questions[state.currentIndex];
-  const correctIndex = q.answerIndex;
-  state.totalElapsedSec += CONFIG.TIME_PER_QUESTION;
+  if (state.currentChoice != null) {
+    commitAnswer();
+  } else {
+    // Chấm như trả lời sai
+    const q = state.questions[state.currentIndex];
+    const correctIndex = q.answerIndex;
+    state.totalElapsedSec += CONFIG.TIME_PER_QUESTION;
 
-  // Lưu
-  state.answers.push({
-    id: q.id, prompt: q.prompt, chosenIndex: null, correctIndex,
-    correct: false, base: 0, bonus: 0, elapsedSec: CONFIG.TIME_PER_QUESTION, tags: q.tags || [],
-    explanation: q.explanation || "", difficulty: q.difficulty || "NB"
-  });
+    // Lưu
+    state.answers.push({
+      id: q.id, prompt: q.prompt, chosenIndex: null, correctIndex,
+      correct: false, base: 0, bonus: 0, elapsedSec: CONFIG.TIME_PER_QUESTION, tags: q.tags || [],
+      explanation: q.explanation || "", difficulty: q.difficulty || "NB"
+    });
 
-  // Chuyển câu tiếp
-  nextQuestion();
+    // Chuyển câu tiếp
+    nextQuestion();
+  }
 }
 
 function nextQuestion() {
+  const card = $("#questionCard");
+  if (card) {
+    card.classList.add("fade-out");
+    setTimeout(() => {
+      doNextQuestionLogic();
+      card.classList.remove("fade-out");
+    }, 250); // Khớp với thời gian transition CSS
+  } else {
+    doNextQuestionLogic();
+  }
+}
+
+function doNextQuestionLogic() {
   clearInterval(state.autoNextId);
   $("#btnNext").textContent = "Tiếp tục ▶";
   state.currentIndex += 1;
@@ -424,6 +462,7 @@ function resetToLobby() {
   $("#options").innerHTML = "";
   $("#feedback").classList.add("hidden");
   $("#explanation").classList.add("hidden");
+  const txtPot = $("#txtPotentialScore"); if (txtPot) { txtPot.textContent = `+${CONFIG.BASE_POINTS + CONFIG.MAX_SPEED_BONUS}`; txtPot.style.color = "var(--ok)"; }
   const bar = $("#lineProgress"); if (bar) bar.style.width = "0%";
 }
 

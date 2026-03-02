@@ -98,14 +98,17 @@
         <span class="label">Câu</span>
         <span id="txtProgress" class="value">1/25</span>
       </div>
-      <div class="hud-item timer" id="timerWrap" title="Thời gian còn lại">
-        <div class="ring" id="timerRing" role="timer" aria-live="polite">
-          <span id="txtTimer">30</span>
-        </div>
-      </div>
       <div class="hud-item player-info">
         <span id="hudName" class="label">Người chơi</span>
         <span id="hudMssv" class="value">–</span>
+      </div>
+      <div class="hud-item timer" id="timerWrap" title="Thời gian còn lại">
+        <div class="ring" id="timerRing" role="timer" aria-live="polite">
+          <div id="timerInner" style="display: flex; flex-direction: column; align-items: center;">
+            <span id="txtPotentialScore" title="Điểm cộng hiện tại"
+              style="color: var(--ok); font-size: 1.4rem; font-weight: bold; line-height: 1;">+20</span>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -115,7 +118,6 @@
 
     <section id="questionCard" class="card question-card">
       <div class="q-meta">
-        <span id="qTags" class="tags"></span>
         <span id="qRemain" class="remain"></span>
       </div>
       <h3 id="qText">Câu hỏi?</h3>
@@ -169,7 +171,7 @@
   </div>
 
   <footer class="app-footer" role="contentinfo">
-    <div>© <span id="year"></span> TSOSAD255</div>
+    <div>© <span id="year"></span> Khoa KHXH&NT</div>
   </footer>
 
   <script src="questions.js"></script>
