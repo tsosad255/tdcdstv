@@ -214,7 +214,7 @@ function startAutoNextCountdown() {
   // Hàm này không còn dùng nữa do chế độ AutoNext trực tiếp khi chọn
 }
 
-function onStart() {
+async function onStart() {
   const name = $("#inpName").value.trim();
   const mssv = $("#inpMssv").value.trim();
   const lop = $("#inpClass").value.trim();
@@ -244,6 +244,38 @@ function onStart() {
     customAlert("Vui lòng Xác nhận đồng ý cung cấp thông tin.");
     return;
   }
+
+  const endpoint = CONFIG.GOOGLE_SHEETS_ENDPOINT;
+  if (!endpoint) {
+    customAlert("Lỗi ENDPOINT hãy báo lại với BTC.");
+    return;
+  }
+
+  // Khóa nút bắt đầu và hiện loading
+  const btnStart = $("#btnStart");
+  const originalText = btnStart.textContent;
+  btnStart.disabled = true;
+  btnStart.textContent = "Đang kiểm tra...";
+
+  try {
+    const res = await fetch(endpoint + "?mssv=" + encodeURIComponent(mssv));
+    const data = await res.json();
+    if (data.exists) {
+      customAlert("Mã số sinh viên (MSSV) này đã tham gia bài thi. Mỗi sinh viên chỉ được tham gia 1 lần.");
+      btnStart.disabled = false;
+      btnStart.textContent = originalText;
+      return;
+    }
+  } catch (err) {
+    console.warn("Lỗi kiểm tra trùng lặp MSSV:", err);
+    customAlert("Lỗi kết nối máy chủ khi kiểm tra MSSV. Vui lòng thử lại sau.");
+    btnStart.disabled = false;
+    btnStart.textContent = originalText;
+    return;
+  }
+
+  btnStart.disabled = false;
+  btnStart.textContent = originalText;
 
   state.sessionId = uuid();
   state.player = { name, mssv, lop };
